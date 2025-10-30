@@ -1,0 +1,84 @@
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv('1KBtJf20QHGyrNOTEGeq_saude_do_sono_estilo_vida.csv')
+
+# 1
+df = df.rename(columns={
+    'ID': 'Identificador',
+    'Pressão sanguíneaaaa': 'Pressão sanguínea',
+    'Ocupação': 'Profissão',
+    'Categoria BMI': 'Categoria IMC'
+})
+
+# 2
+horas_sono = df.groupby('Profissão')['Duração do sono'].agg(
+    média='mean',
+    mediana=np.median,
+    moda= pd.Series.mode
+)
+print(horas_sono)
+
+# 3
+engenheiros = df[df['Profissão'].str.lower() == 'eng. de software']
+total = len(engenheiros)
+obesos = len(engenheiros[engenheiros['Categoria IMC'].str.lower() == 'obesidade'])
+if total > 0:
+    porcentagem_obesos = (obesos / total) * 100
+else:
+    porcentagem_obesos = np.nan
+print("A porcentagem de Eng. de Software obesos é de", porcentagem_obesos, "%")
+
+# 4
+profissoes = ['Advogado(a)', 'Representante de Vendas']
+df_filtrado = df[df['Profissão'].isin(profissoes)]
+media_sono = df_filtrado['Duração do sono'].mean()
+
+if media_sono < 8:
+    print("Sim, essas profissões dormem menos que 8 horas. Média:", media_sono)
+else:
+    print("Não, essas profissões dormem 8 horas ou mais. Média:", media_sono)
+
+# 5
+profissoes = ['Enfermeiro(a)', 'Médico(a)']
+df_filtrado = df[df['Profissão'].isin(profissoes)]
+media_sono = df_filtrado.groupby('Profissão')['Duração do sono'].mean()
+
+if media_sono['Enfermeiro(a)'] < media_sono['Médico(a)']:
+    print("Enfermagem dorme menos que Medicina. Médias:", media_sono['Enfermeiro(a)'], ",", media_sono['Médico(a)'])
+else:
+    print("Medicina dorme menos ou igual que Enfermagem. Médias:", media_sono['Médico(a)'], ",", media_sono['Enfermeiro(a)'])
+
+# 6
+subconjunto = df[['Identificador', 'Gênero', 'Idade', 'Pressão sanguínea', 'Frequência cardíaca']]
+print(subconjunto.head())
+
+# 7
+profissao_menos_frequente = df['Profissão'].value_counts().idxmin()
+print("A profissão menos frequente no conjunto é:", profissao_menos_frequente)
+
+# 8
+df['Pressão_sistólica'] = pd.to_numeric(df['Pressão sanguínea'].str.split('/').str[0], errors='coerce')
+media = df.groupby('Gênero')['Pressão_sistólica'].mean()
+print("Média de pressão sistólica por gênero:", media)
+
+if media['Homem'] > media['Mulher']:
+    print("Homens têm maior pressão sanguínea média.", media['Homem'], ",", media['Mulher'])
+else:
+    print("Mulheres têm maior pressão sanguínea média.", media['Mulher'], ",", media['Homem'])
+
+# 9
+moda_sono = df['Duração do sono'].mode()[0]
+if moda_sono == 8:
+    print("Sim, é predominante dormir 8 horas. Moda:", moda_sono)
+else:
+    print("Não, a quantidade predominante de sono não é 8 horas. Moda:", moda_sono)
+
+# 10
+acima_70 = df[df['Frequência cardíaca'] > 70]['Passos diários'].mean()
+ate_70 = df[df['Frequência cardíaca'] <= 70]['Passos diários'].mean()
+
+if acima_70 > ate_70:
+    print("Sim, pessoas com FC acima de 70 dão mais passos.", acima_70, ",", ate_70)
+else:
+    print("Não, pessoas com FC acima de 70 não dão mais passos.", acima_70, ",", ate_70)
